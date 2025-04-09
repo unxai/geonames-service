@@ -1,0 +1,25 @@
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Binary files
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Output directories
+bin/
+dist/
+
+# Go specific
+*.test
+*.out
+go.work
+
+# OS specific
+.DS_Store
+.env
+*.log

@@ -18,6 +18,20 @@ var rootCmd = &cobra.Command{
 	Long:  `GeoNames CLI工具用于管理GeoNames数据。`,
 }
 
+// 迁移命令
+var migrateCmd = &cobra.Command{
+	Use:   "migrate",
+	Short: "执行数据库迁移",
+	Long:  `执行数据库迁移脚本，创建或更新数据库表结构。`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := db.Migrate(); err != nil {
+			logger.Logger.Error("数据库迁移失败", zap.Error(err))
+			return
+		}
+		logger.Logger.Info("数据库迁移成功")
+	},
+}
+
 // 下载命令
 var downloadCmd = &cobra.Command{
 	Use:   "download",
@@ -51,6 +65,7 @@ func downloadAndSaveData() error {
 
 func init() {
 	rootCmd.AddCommand(downloadCmd)
+	rootCmd.AddCommand(migrateCmd)
 }
 
 func main() {

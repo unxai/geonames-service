@@ -3,6 +3,9 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
 	"sync"
 
 	_ "github.com/lib/pq"
@@ -55,5 +58,38 @@ func CloseDB() error {
 	if db != nil {
 		return db.Close()
 	}
+	return nil
+}
+
+// Migrate 执行数据库迁移
+func Migrate() error {
+	db := GetDB()
+
+	// 读取migrations目录下的SQL文件
+	files, err := os.ReadDir("db/migrations")
+	if err != nil {
+		return fmt.Errorf("读取迁移文件失败: %w", err)
+	}
+
+	// 按文件名排序执行迁移
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].Name() < files[j].Name()
+	})
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
+		content, err := os.ReadFile(filepath.Join("db/migrations", file.Name()))
+		if err != nil {
+			return fmt.Errorf("读取迁移文件内容失败: %w", err)
+		}
+
+		if _, err := db.Exec(string(content)); err != nil {
+			return fmt.Errorf("执行迁移脚本失败(%s): %w", file.Name(), err)
+		}
+	}
+
 	return nil
 }

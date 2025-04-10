@@ -23,3 +23,7 @@ go.work
 .DS_Store
 .env
 *.log
+
+# Data files
+data/*
+!data/.gitkeep

@@ -1,0 +1,23 @@
+# Database Configuration
+database:
+  host: localhost
+  port: 5432
+  user: admin
+  password: 12345678
+  dbname: geonames
+  sslmode: disable
+
+# Server Configuration
+server:
+  port: 8080
+  host: localhost
+
+# Download Configuration
+download:
+  url: http://download.geonames.org/export/dump/allCountries.zip
+  batch_size: 1000
+
+# Log Configuration
+log:
+  level: info
+  path: ./logs/geonames.log

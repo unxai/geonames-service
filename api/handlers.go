@@ -5,53 +5,79 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/unxai/geonames-service/db"
 	"github.com/unxai/geonames-service/models"
-	"github.com/unxai/geonames-service/utils"
 )
 
-var locations []models.Location
+// GetLocationsHandler 获取地理位置信息
+func GetLocationsHandler(w http.ResponseWriter, r *http.Request) {
+	db := db.GetDB()
 
-// DownloadHandler 处理下载地理数据的请求
-func DownloadHandler(w http.ResponseWriter, r *http.Request) {
-	var err error
-	locations, err = utils.DownloadGeoData()
+	rows, err := db.Query("SELECT geoname_id, name, ascii_name, latitude, longitude, country_code, population, feature_class, feature_code FROM locations LIMIT 100")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	defer rows.Close()
 
-	response := map[string]interface{}{
-		"message": "数据下载成功",
-		"count":   len(locations),
+	var locations []models.Location
+	for rows.Next() {
+		var loc models.Location
+		err := rows.Scan(
+			&loc.GeonameID,
+			&loc.Name,
+			&loc.ASCII_Name,
+			&loc.Latitude,
+			&loc.Longitude,
+			&loc.CountryCode,
+			&loc.Population,
+			&loc.FeatureClass,
+			&loc.FeatureCode,
+		)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		locations = append(locations, loc)
 	}
-	json.NewEncoder(w).Encode(response)
-}
 
-// GetLocationsHandler 获取地理位置信息
-func GetLocationsHandler(w http.ResponseWriter, r *http.Request) {
-	if len(locations) == 0 {
-		http.Error(w, "请先下载数据", http.StatusNotFound)
-		return
-	}
-	json.NewEncoder(w).Encode(locations[:100]) // 仅返回前100条记录作为示例
+	json.NewEncoder(w).Encode(locations)
 }
 
 // GetLocationsByCountryHandler 按国家代码搜索
 func GetLocationsByCountryHandler(w http.ResponseWriter, r *http.Request) {
-	if len(locations) == 0 {
-		http.Error(w, "请先下载数据", http.StatusNotFound)
-		return
-	}
+	db := db.GetDB()
 
 	vars := mux.Vars(r)
 	countryCode := vars["countryCode"]
 
-	var result []models.Location
-	for _, loc := range locations {
-		if loc.CountryCode == countryCode {
-			result = append(result, loc)
+	rows, err := db.Query("SELECT geoname_id, name, ascii_name, latitude, longitude, country_code, population, feature_class, feature_code FROM locations WHERE country_code = $1", countryCode)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var locations []models.Location
+	for rows.Next() {
+		var loc models.Location
+		err := rows.Scan(
+			&loc.GeonameID,
+			&loc.Name,
+			&loc.ASCII_Name,
+			&loc.Latitude,
+			&loc.Longitude,
+			&loc.CountryCode,
+			&loc.Population,
+			&loc.FeatureClass,
+			&loc.FeatureCode,
+		)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
+		locations = append(locations, loc)
 	}
 
-	json.NewEncoder(w).Encode(result)
+	json.NewEncoder(w).Encode(locations)
 }

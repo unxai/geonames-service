@@ -13,8 +13,6 @@ test:
 
 clean:
 	rm -rf bin/
-	docker-compose down
 
 dev: clean
-	docker-compose up -d
 	go run main.go

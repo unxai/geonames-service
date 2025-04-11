@@ -46,30 +46,38 @@ func (s *PostgresStorage) SaveLocations(locations []models.Location) error {
 
 		// 构建批量插入的值占位符
 		valueStrings := make([]string, 0, len(batch))
-		valueArgs := make([]interface{}, 0, len(batch)*9)
+		valueArgs := make([]interface{}, 0, len(batch)*15)
 		for j, loc := range batch {
-			valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)",
-				j*9+1, j*9+2, j*9+3, j*9+4, j*9+5, j*9+6, j*9+7, j*9+8, j*9+9))
+			valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)",
+				j*15+1, j*15+2, j*15+3, j*15+4, j*15+5, j*15+6, j*15+7, j*15+8, j*15+9, j*15+10, j*15+11, j*15+12, j*15+13, j*15+14, j*15+15))
 			valueArgs = append(valueArgs,
-				loc.GeonameID, loc.Name, loc.ASCII_Name, loc.Latitude, loc.Longitude,
-				loc.CountryCode, loc.Population, loc.FeatureClass, loc.FeatureCode)
+				loc.GeonameID, loc.Name, loc.ASCII_Name, loc.AlternateNames, loc.Latitude, loc.Longitude,
+				loc.FeatureClass, loc.FeatureCode, loc.CountryCode, loc.Admin1Code, loc.Admin2Code,
+				loc.Population, loc.Elevation, loc.TimeZone, loc.ModificationDate)
 		}
 
 		// 构建完整的SQL语句
 		sql := fmt.Sprintf(`
 		INSERT INTO locations (
-			geoname_id, name, ascii_name, latitude, longitude,
-			country_code, population, feature_class, feature_code
+			geoname_id, name, ascii_name, alternate_names, latitude, longitude,
+			feature_class, feature_code, country_code, admin1_code, admin2_code,
+			population, elevation, timezone, modification_date
 		) VALUES %s
 		ON CONFLICT (geoname_id) DO UPDATE SET
 			name = EXCLUDED.name,
 			ascii_name = EXCLUDED.ascii_name,
+			alternate_names = EXCLUDED.alternate_names,
 			latitude = EXCLUDED.latitude,
 			longitude = EXCLUDED.longitude,
-			country_code = EXCLUDED.country_code,
-			population = EXCLUDED.population,
 			feature_class = EXCLUDED.feature_class,
-			feature_code = EXCLUDED.feature_code
+			feature_code = EXCLUDED.feature_code,
+			country_code = EXCLUDED.country_code,
+			admin1_code = EXCLUDED.admin1_code,
+			admin2_code = EXCLUDED.admin2_code,
+			population = EXCLUDED.population,
+			elevation = EXCLUDED.elevation,
+			timezone = EXCLUDED.timezone,
+			modification_date = EXCLUDED.modification_date
 		`, strings.Join(valueStrings, ","))
 
 		// 执行批量插入

@@ -23,7 +23,7 @@ const workerCount = 10 // 并发worker数量
 // parseLocation 解析单行数据为Location结构
 func parseLocation(line string) (models.Location, error) {
 	fields := strings.Split(line, "\t")
-	if len(fields) <= 14 {
+	if len(fields) < 19 {
 		return models.Location{}, fmt.Errorf("invalid field count")
 	}
 
@@ -31,17 +31,24 @@ func parseLocation(line string) (models.Location, error) {
 	lat, _ := strconv.ParseFloat(fields[4], 64)
 	lon, _ := strconv.ParseFloat(fields[5], 64)
 	pop, _ := strconv.Atoi(fields[14])
+	elev, _ := strconv.Atoi(fields[15])
 
 	return models.Location{
-		GeonameID:    geonameID,
-		Name:         fields[1],
-		ASCII_Name:   fields[2],
-		Latitude:     lat,
-		Longitude:    lon,
-		CountryCode:  fields[8],
-		Population:   pop,
-		FeatureClass: fields[6],
-		FeatureCode:  fields[7],
+		GeonameID:        geonameID,
+		Name:             fields[1],
+		ASCII_Name:       fields[2],
+		AlternateNames:   fields[3],
+		Latitude:         lat,
+		Longitude:        lon,
+		FeatureClass:     fields[6],
+		FeatureCode:      fields[7],
+		CountryCode:      fields[8],
+		Admin1Code:       fields[10],
+		Admin2Code:       fields[11],
+		Population:       pop,
+		Elevation:        elev,
+		TimeZone:         fields[17],
+		ModificationDate: fields[18],
 	}, nil
 }
 

@@ -36,7 +36,7 @@ go run cmd/server/main.go
 
 ## 技术栈
 
-- Go 1.23.3
+- Go 1.23+
 - Gorilla Mux (HTTP 路由)
 - PostgreSQL (数据存储)
 
